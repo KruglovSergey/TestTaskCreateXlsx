@@ -5,6 +5,9 @@ namespace TestTask.Models
 {
     internal class DBInitializer
     {
+        /// <summary>
+        /// Создаем объекты в БД
+        /// </summary>
         public static void Initialize(ApplicationContext context)
         {
             using (ApplicationContext db = new ApplicationContext())

@@ -12,12 +12,10 @@ namespace TestTask
         private static void Main(string[] args)
         {
             ApplicationContext db = new ApplicationContext();
+
             DBInitializer.Initialize(db);
 
-            IQueryable<Orders> orders = db.Orders
-                .Include(x => x.Shops)
-                .Include(x => x.OrderComponents)
-                   .ThenInclude(x => x.ProductLibrary);
+            var orders = GetOrders(db);
 
             CreateOrdersXlsx(orders);
 
@@ -25,6 +23,11 @@ namespace TestTask
             Console.ReadKey();
         }
 
+
+        /// <summary>
+        /// Создаем таблицы заказов по шаблону
+        /// </summary>
+        /// <param name="orders">Все заказы из БД</param>
         public static void CreateOrdersXlsx(IQueryable<Orders> orders)
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -32,6 +35,7 @@ namespace TestTask
             var sheet = package.Workbook.Worksheets[0];
 
             //Условие, что выбираем заказы, где заказа пустой, и проставлена дата согласования.
+            //При большой БД эта фильтрация была бы выше по логике.
             var filteredOrders = orders.Where(x => x.DraftOrder == null && x.DateOrderAgreed != null).ToList();
 
             if (filteredOrders != null)
@@ -83,6 +87,24 @@ namespace TestTask
                 Console.WriteLine("Список заказов пуст");
                 Console.ReadKey();
             }
+        }
+
+
+        /// <summary>
+        /// Получить все заказы
+        /// </summary>
+        /// <param name="db">Контекст ДБ</param>
+        /// <returns></returns>
+        public static IQueryable<Orders> GetOrders(ApplicationContext db)
+        {
+            IQueryable<Orders> orders = db.Orders
+                    .Include(x => x.Shops)
+                    .Include(x => x.OrderComponents)
+                        .ThenInclude(x => x.ProductLibrary);
+
+            // Если БД была бы довольно большой, то тут должен был бы быть метод сразу фильтрующий по заданному условию
+
+            return orders;
         }
     }
 }
